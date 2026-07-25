@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GoalOracle — World Cup 2026 · x402 on Injective</title>
+<style>
+  :root {
+    --bg: #0b0e14; --panel: #131824; --panel2: #1a2130; --text: #e8ecf3;
+    --muted: #8b94a7; --accent: #22d3ee; --live: #f43f5e; --ok: #34d399; --line: #232b3d;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; padding: 24px; max-width: 1100px; margin: 0 auto; }
+  header { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
+  h1 { font-size: 26px; letter-spacing: .3px; }
+  h1 span { color: var(--accent); }
+  .sub { color: var(--muted); font-size: 13px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); margin-bottom: 12px; }
+  .match { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--panel2); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+  .teams { font-weight: 600; }
+  .score { font-size: 20px; font-weight: 700; min-width: 64px; text-align: center; }
+  .badge { font-size: 11px; font-weight: 700; border-radius: 6px; padding: 2px 8px; }
+  .badge.live { background: var(--live); color: #fff; animation: pulse 1.6s infinite; }
+  .badge.sched { background: #2b3650; color: var(--muted); }
+  .badge.fin { background: #223; color: var(--muted); }
+  @keyframes pulse { 50% { opacity: .55; } }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .buy { background: var(--accent); border: 0; color: #04222a; font-weight: 700; border-radius: 8px; padding: 7px 12px; cursor: pointer; font-size: 13px; }
+  .buy:hover { filter: brightness(1.1); }
+  .buy:disabled { opacity: .5; cursor: wait; }
+  #analysis { grid-column: 1 / -1; }
+  #analysis pre { background: var(--panel2); border-radius: 10px; padding: 14px; overflow-x: auto; font-size: 13px; }
+  .verdict { font-size: 16px; margin: 10px 0; }
+  .probbar { display: flex; height: 26px; border-radius: 8px; overflow: hidden; font-size: 12px; font-weight: 700; color: #04222a; margin: 10px 0; }
+  .probbar div { display: flex; align-items: center; justify-content: center; min-width: 34px; }
+  .pa { background: var(--accent); } .pd { background: #94a3b8; } .pb { background: var(--ok); }
+  .receipt { color: var(--ok); font-size: 13px; margin-top: 8px; word-break: break-all; }
+  .note { color: var(--muted); font-size: 12px; margin-top: 10px; }
+  footer { color: var(--muted); font-size: 12px; margin-top: 22px; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>⚽ Goal<span>Oracle</span></h1>
+  <div class="sub">World Cup 2026 live data · premium analytics paid per-call in USDC via <b>x402 on Injective EVM testnet</b></div>
+</header>
+
+<div class="grid">
+  <section>
+    <h2>Live &amp; today <span class="sub" id="refreshed"></span></h2>
+    <div id="matches">Loading…</div>
+  </section>
+
+  <section>
+    <h2>Group standings</h2>
+    <div id="standings">Loading…</div>
+  </section>
+
+  <section id="analysis" hidden>
+    <h2>Premium analysis <span class="sub">— bought with USDC via x402</span></h2>
+    <div id="analysis-body"></div>
+  </section>
+</div>
+
+<footer>
+  Analytics are statistical estimates from a deterministic Poisson model — not betting advice.
+  · Free API + <a href="https://github.com/modelcontextprotocol">MCP server</a> · testnet only
+</footer>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+async function loadMatches() {
+  try {
+    const [liveRes, todayRes] = await Promise.all([fetch("/matches/live"), fetch("/matches/today")]);
+    const live = (await liveRes.json()).matches;
+    const today = (await todayRes.json()).matches.filter((m) => m.status !== "LIVE");
+    const rows = [...live, ...today].map((m) => {
+      const badge = m.status === "LIVE" ? `<span class="badge live">LIVE ${m.minute}'</span>`
+        : m.status === "FINISHED" ? '<span class="badge fin">FT</span>'
+        : `<span class="badge sched">${new Date(m.utcDate).toUTCString().slice(17, 22)} UTC</span>`;
+      const score = m.score.home === null ? "–" : `${m.score.home} : ${m.score.away}`;
+      const buy = `<button class="buy" onclick="buyAnalysis(${m.id}, this)">Buy analysis · $0.01</button>`;
+      return `<div class="match"><div><div class="teams">${esc(m.homeTeam.name)} vs ${esc(m.awayTeam.name)}</div>
+        <div class="sub">${esc(m.stage.replaceAll("_", " ").toLowerCase())}</div></div>
+        <div class="score">${score}</div>${badge}${buy}</div>`;
+    });
+    $("matches").innerHTML = rows.join("") || '<div class="sub">No matches today.</div>';
+    $("refreshed").textContent = "· refreshed " + new Date().toLocaleTimeString();
+  } catch (e) { $("matches").innerHTML = '<div class="sub">API unreachable — is the server running?</div>'; }
+}
+
+async function loadStandings() {
+  try {
+    const { standings } = await (await fetch("/standings")).json();
+    $("standings").innerHTML = standings.map((g) => `
+      <h3 class="sub" style="margin:8px 0 4px">Group ${esc(g.group)}</h3>
+      <table><tr><th>#</th><th>Team</th><th class="num">P</th><th class="num">GD</th><th class="num">Pts</th></tr>
+      ${g.table.map((r) => `<tr><td>${r.position}</td><td>${esc(r.team.name)}</td>
+        <td class="num">${r.played}</td><td class="num">${r.goalDifference > 0 ? "+" : ""}${r.goalDifference}</td>
+        <td class="num"><b>${r.points}</b></td></tr>`).join("")}</table>`).join("");
+  } catch (e) { $("standings").innerHTML = '<div class="sub">API unreachable.</div>'; }
+}
+
+async function buyAnalysis(id, btn) {
+  btn.disabled = true; btn.textContent = "Paying via x402…";
+  try {
+    const data = await (await fetch(`/demo/analyze/${id}`)).json();
+    const a = data.analysis, m = data.match ?? {};
+    const nameA = m.homeTeam?.name ?? "Home", nameB = m.awayTeam?.name ?? "Away";
+    const p = a.winProbability;
+    const pct = (x) => Math.round(x * 100) + "%";
+    $("analysis").hidden = false;
+    $("analysis-body").innerHTML = `
+      <div class="verdict"><b>${esc(nameA)} vs ${esc(nameB)}</b> — ${esc(a.verdict)}</div>
+      <div class="probbar">
+        <div class="pa" style="flex:${p.a}">${esc(nameA)} ${pct(p.a)}</div>
+        <div class="pd" style="flex:${p.draw}">draw ${pct(p.draw)}</div>
+        <div class="pb" style="flex:${p.b}">${esc(nameB)} ${pct(p.b)}</div>
+      </div>
+      <div class="sub">Expected goals: ${esc(nameA)} ${a.expectedGoals.a} — ${esc(nameB)} ${a.expectedGoals.b}
+        · form ${a.formIndexA}/10 vs ${a.formIndexB}/10</div>
+      <ul class="note">${a.keyFactors.map((f) => `<li>${esc(f)}</li>`).join("")}</ul>
+      ${data.paid
+        ? `<div class="receipt">✔ paid ${data.receipt ? "— tx " + esc(data.receipt.transaction) : "(receipt pending)"}</div>`
+        : `<div class="note">dry-run: server returned the live x402 402 challenge (${esc(JSON.stringify(data.x402Challenge?.accepts?.[0]?.amount ?? ""))} USDC units quoted) — set AGENT_PRIVATE_KEY to pay for real.</div>`}
+    `;
+    $("analysis").scrollIntoView({ behavior: "smooth" });
+  } catch (e) {
+    $("analysis").hidden = false;
+    $("analysis-body").innerHTML = `<div class="sub">Analysis failed: ${esc(e.message ?? e)}</div>`;
+  } finally { btn.disabled = false; btn.textContent = "Buy analysis · $0.01"; }
+}
+
+loadMatches(); loadStandings();
+setInterval(loadMatches, 30_000);
+</script>
+</body>
+</html>
