@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "goaloracle": {
+      "command": "npx",
+      "args": ["tsx", "packages/mcp-server/src/index.ts"],
+      "env": {
+        "API_BASE_URL": "http://localhost:3000"
+      }
+    }
+  }
+}
