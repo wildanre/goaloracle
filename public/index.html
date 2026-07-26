@@ -9,21 +9,22 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  /* shadcn new-york, zinc, dark — solid colors only (no alpha, no gradients) */
+  /* shadcn zinc dark — solid colors only. Two background tiers (bg, surface).
+     Text: foreground + muted only; --decor is reserved for decorative marks.
+     Borders: --border for passive edges, --input for interactive controls.
+     Spacing: 4pt scale (4, 8, 12, 16, 24, 32, 40, 64). Type: 12 / 13 / 14 / 17. */
   :root {
-    --background: #09090b;   /* zinc-950 */
-    --card: #131316;         /* between zinc-950 and zinc-900 */
-    --surface: #18181b;      /* zinc-900 */
-    --secondary: #27272a;    /* zinc-800 */
-    --border: #27272a;       /* zinc-800 */
-    --input: #3f3f46;        /* zinc-700 */
-    --foreground: #fafafa;   /* zinc-50 */
+    --background: #09090b;       /* zinc-950 */
+    --surface: #18181b;          /* zinc-900 */
+    --secondary: #27272a;        /* zinc-800 */
+    --border: #27272a;           /* zinc-800 */
+    --input: #3f3f46;            /* zinc-700 */
+    --foreground: #fafafa;       /* zinc-50 */
     --muted-foreground: #a1a1aa; /* zinc-400 */
-    --faint-foreground: #71717a; /* zinc-500, large/label text only */
+    --decor: #71717a;            /* zinc-500 — never body text */
     --primary: #fafafa;
     --primary-foreground: #18181b;
     --primary-hover: #e4e4e7;
-    --secondary-hover: #3f3f46;
     --ring: #d4d4d8;
     --radius: 0.625rem;
     --radius-sm: 0.4375rem;
@@ -45,46 +46,40 @@
   .topbar { border-bottom: 1px solid var(--border); }
   .topbar-in { display: flex; align-items: center; gap: 16px; height: 56px; }
   .wordmark { font-weight: 600; font-size: 15px; letter-spacing: -0.01em; }
-  .wordmark .dot { color: var(--muted-foreground); }
-  .crumb { color: var(--muted-foreground); font-size: 13.5px; }
+  .wordmark .dot { color: var(--muted-foreground); font-weight: 400; }
   .topbar .right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
   .vsep { width: 1px; height: 20px; background: var(--border); }
 
   .badge {
-    display: inline-flex; align-items: center; gap: 6px;
+    display: inline-flex; align-items: center; gap: 8px;
     font-size: 12px; font-weight: 500; line-height: 1;
     border: 1px solid var(--border); color: var(--muted-foreground);
-    border-radius: 999px; padding: 5px 10px; white-space: nowrap;
+    border-radius: 999px; padding: 4px 12px; white-space: nowrap;
   }
   .badge.solid { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); font-weight: 600; }
   .badge .pulse { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 1.6s cubic-bezier(0.25,1,0.5,1) infinite; }
   @keyframes pulse { 50% { opacity: 0.3; } }
-  .badge .ok { width: 6px; height: 6px; border-radius: 50%; background: var(--muted-foreground); }
+  .badge .ok { width: 6px; height: 6px; border-radius: 50%; background: var(--decor); }
   .badge.online .ok { background: var(--foreground); }
 
   /* ---------- layout ---------- */
-  main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 40px; padding: 32px 0 56px; }
-  @media (max-width: 900px) { main { grid-template-columns: 1fr; gap: 36px; } }
+  main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 40px; padding: 40px 0 64px; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
 
   .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
-  .section-head h2 { font-size: 13px; font-weight: 500; color: var(--muted-foreground); }
-  .section-head .meta { font-size: 12px; color: var(--faint-foreground); font-family: var(--font-mono); }
-  section + section { margin-top: 36px; }
+  .section-head h2 { font-size: 14px; font-weight: 600; color: var(--foreground); }
+  .section-head .meta { font-size: 12px; color: var(--muted-foreground); font-family: var(--font-mono); }
+  #matches > section { margin-top: 40px; }
 
   /* ---------- match rows ---------- */
   .rows { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-  .match { display: grid; grid-template-columns: 92px minmax(0,1fr) auto; align-items: center; gap: 16px; padding: 14px 16px; background: var(--card); }
-  .match + .match { border-top: 1px solid var(--border); }
+  .match { display: grid; grid-template-columns: 92px minmax(0,1fr) auto; align-items: center; gap: 16px; padding: 16px; background: var(--surface); }
+  .rows > .match:not(:first-child) { border-top: 1px solid var(--border); }
   .match .when { font-family: var(--font-mono); font-size: 12px; color: var(--muted-foreground); }
   .match .fixture { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .match .team { font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .match .team.away { text-align: left; }
-  .match .score {
-    font-family: var(--font-mono); font-weight: 600; font-size: 15px;
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
-    padding: 3px 9px; white-space: nowrap;
-  }
-  .match .stage { font-size: 12px; color: var(--faint-foreground); white-space: nowrap; }
+  .match .score { font-family: var(--font-mono); font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .match .stage { font-size: 12px; color: var(--muted-foreground); white-space: nowrap; }
   .match .actions { display: flex; align-items: center; gap: 8px; }
 
   .btn {
@@ -96,86 +91,85 @@
   .btn:focus-visible, a:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
   .btn-primary { background: var(--primary); color: var(--primary-foreground); font-weight: 600; }
   .btn-primary:hover { background: var(--primary-hover); }
-  .btn-outline { background: var(--card); color: var(--foreground); border-color: var(--input); }
+  .btn-outline { background: var(--surface); color: var(--foreground); border-color: var(--input); }
   .btn-outline:hover { background: var(--secondary); }
-  .btn[disabled] { opacity: 0.55; cursor: default; }
+  .btn[disabled] { background: var(--surface); border-color: transparent; color: var(--muted-foreground); cursor: default; }
   .btn .price { font-family: var(--font-mono); font-weight: 500; color: inherit; }
-  .btn-outline .price { color: var(--muted-foreground); }
+  .btn-outline .price, .btn[disabled] .price { color: var(--muted-foreground); }
 
   /* ---------- payment trace (signature) ---------- */
-  .trace { border-top: 1px solid var(--border); background: var(--surface); padding: 14px 16px; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.9; }
-  .trace .ln { display: flex; gap: 10px; color: var(--muted-foreground); }
+  .trace { border-top: 1px solid var(--border); background: var(--surface); padding: 16px; font-family: var(--font-mono); font-size: 12px; line-height: 2; }
+  .trace .ln { display: flex; gap: 12px; color: var(--muted-foreground); }
   .trace .ln.done { color: var(--foreground); }
-  .trace .mark { width: 14px; text-align: center; }
-  .trace .ln .mark { color: var(--muted-foreground); }
+  .trace .mark { width: 14px; text-align: center; color: var(--muted-foreground); }
   .trace .ln.done .mark { color: var(--foreground); }
   .trace a { color: var(--foreground); text-underline-offset: 3px; }
 
-  /* ---------- analysis card ---------- */
-  .analysis { border-top: 1px solid var(--border); background: var(--card); padding: 18px 16px 16px; }
-  .analysis .verdict { font-size: 17px; font-weight: 600; letter-spacing: -0.005em; max-width: 62ch; text-wrap: balance; }
-  .probs { margin-top: 14px; display: grid; gap: 6px; max-width: 520px; }
+  /* ---------- analysis ---------- */
+  .analysis { border-top: 1px solid var(--border); background: var(--surface); padding: 16px; display: grid; gap: 16px; }
+  .analysis .verdict { font-size: 17px; font-weight: 600; letter-spacing: -0.005em; max-width: 560px; text-wrap: balance; }
+  .probs { display: grid; gap: 8px; max-width: 560px; }
   .prob { display: grid; grid-template-columns: 82px minmax(0,1fr) 48px; gap: 12px; align-items: center; }
-  .prob .lbl { font-size: 12.5px; color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .prob .num { font-family: var(--font-mono); font-size: 12.5px; text-align: right; color: var(--muted-foreground); }
+  .prob .lbl { font-size: 13px; color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .prob .num { font-family: var(--font-mono); font-size: 12px; text-align: right; color: var(--muted-foreground); }
   .prob.top .lbl, .prob.top .num { color: var(--foreground); font-weight: 600; }
   .prob .track { height: 8px; background: var(--secondary); border-radius: 4px; overflow: hidden; }
-  .prob .fill { height: 100%; background: var(--faint-foreground); border-radius: 4px; transform: scaleX(0); transform-origin: left; transition: transform 0.45s cubic-bezier(0.22,1,0.36,1); }
+  .prob .fill { height: 100%; background: var(--muted-foreground); border-radius: 4px; transform: scaleX(0); transform-origin: left; transition: transform 0.45s cubic-bezier(0.22,1,0.36,1); }
   .prob.top .fill { background: var(--foreground); }
-  .factors { margin: 14px 0 0; padding: 0; list-style: none; max-width: 68ch; }
-  .factors li { position: relative; padding: 7px 0 7px 18px; color: var(--muted-foreground); font-size: 13px; }
-  .factors li::before { content: "·"; position: absolute; left: 4px; color: var(--faint-foreground); }
+  .factors { padding: 0; list-style: none; max-width: 560px; }
+  .factors li { position: relative; padding: 8px 0 8px 20px; color: var(--muted-foreground); font-size: 13px; }
+  .factors li::before { content: "·"; position: absolute; left: 4px; color: var(--decor); }
   .factors li + li { border-top: 1px solid var(--border); }
-  .stat-line { margin-top: 12px; font-family: var(--font-mono); font-size: 12px; color: var(--muted-foreground); }
+  .stat-line { font-family: var(--font-mono); font-size: 12px; color: var(--muted-foreground); }
   .stat-line b { color: var(--foreground); font-weight: 600; }
 
   /* ---------- standings ---------- */
   .tables { display: grid; gap: 24px; }
   table { width: 100%; border-collapse: collapse; }
   caption { text-align: left; font-size: 13px; font-weight: 500; color: var(--muted-foreground); padding-bottom: 8px; }
-  th { font-size: 12px; font-weight: 500; color: var(--faint-foreground); text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  th { font-size: 12px; font-weight: 500; color: var(--muted-foreground); text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--border); }
   td { font-size: 13px; padding: 8px; border-bottom: 1px solid var(--border); }
   tr:last-child td { border-bottom: 0; }
-  th.n, td.n { text-align: right; font-family: var(--font-mono); font-size: 12.5px; }
-  td.pos { color: var(--faint-foreground); font-family: var(--font-mono); font-size: 12px; width: 28px; }
+  th.n, td.n { text-align: right; font-family: var(--font-mono); font-size: 12px; }
+  td.pos { color: var(--muted-foreground); font-family: var(--font-mono); font-size: 12px; width: 28px; }
   td.team-cell { font-weight: 500; }
   td.pts { font-weight: 600; color: var(--foreground); }
-  tbody tr { transition: background-color 0.15s ease-out; }
-  tbody tr:hover { background: var(--card); }
 
   /* ---------- states ---------- */
   .skeleton { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-  .skeleton .sk-row { height: 52px; background: var(--card); }
+  .skeleton .sk-row { height: 52px; background: var(--surface); }
   .sk-row + .sk-row { border-top: 1px solid var(--border); }
   .sk-bar { height: 12px; width: 40%; margin: 20px 16px; border-radius: 6px; background: var(--secondary); animation: sk 1.4s ease-in-out infinite; }
   @keyframes sk { 50% { opacity: 0.5; } }
-  .empty { border: 1px dashed var(--input); border-radius: var(--radius); padding: 28px 24px; text-align: center; }
+  .empty { border: 1px dashed var(--border); border-radius: var(--radius); padding: 32px 24px; text-align: center; }
   .empty p { color: var(--muted-foreground); font-size: 13px; }
-  .empty .hint { margin-top: 4px; color: var(--faint-foreground); font-size: 12px; }
+  .empty .hint { margin-top: 4px; font-size: 12px; }
 
   footer { border-top: 1px solid var(--border); }
-  .footer-in { display: flex; flex-wrap: wrap; gap: 8px 24px; padding: 18px 0 26px; font-size: 12px; color: var(--faint-foreground); }
+  .footer-in { display: flex; flex-wrap: wrap; gap: 8px 24px; padding: 16px 0 24px; font-size: 12px; color: var(--muted-foreground); }
   footer a { color: var(--muted-foreground); text-decoration: none; }
   footer a:hover { color: var(--foreground); text-decoration: underline; text-underline-offset: 3px; }
 
   @media (max-width: 640px) {
     .topbar-in { height: auto; padding: 12px 0; flex-wrap: wrap; gap: 8px 12px; }
     .wordmark .dot, .vsep { display: none; }
-    .match { grid-template-columns: 1fr; gap: 10px; } .match > .badge, .match > .when { justify-self: start; }
+    .match { grid-template-columns: 1fr; gap: 12px; }
+    .match > .badge, .match > .when { justify-self: start; }
     .match .fixture { flex-wrap: wrap; row-gap: 4px; }
     .match .actions, .match .actions .btn { width: 100%; }
-    .match .actions .btn { padding: 10px 12px; text-align: center; }
+    .match .actions .btn { padding: 12px; text-align: center; }
   }
   @media (prefers-reduced-motion: reduce) {
     .badge .pulse, .sk-bar { animation: none; }
-    .prob .fill { transform: scaleX(1) !important; transition: none; } .btn, tbody tr { transition: none; }
+    .prob .fill { transform: scaleX(1) !important; transition: none; }
+    .btn { transition: none; }
   }
 </style>
 </head>
 <body>
 <div class="topbar">
   <div class="wrap topbar-in">
-    <span class="wordmark">GoalOracle<span class="dot"> — World Cup 2026</span></span>
+    <span class="wordmark">GoalOracle<span class="dot"> · World Cup 2026</span></span>
     <div class="right">
       <span class="badge" id="net-badge">Injective testnet</span>
       <span class="vsep"></span>
@@ -225,7 +219,6 @@
 <script>
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const money = (n) => "$" + n.toFixed(2).replace(/0$/, n === 0.01 ? "1" : "");
 let openMatchId = null;
 
 async function health() {
@@ -245,7 +238,7 @@ function whenLabel(m) {
 
 function matchRow(m) {
   const score = m.score.home === null ? "vs" : `${m.score.home}&#8211;${m.score.away}`;
-  const stage = m.stage.replaceAll("_", " ").toLowerCase().replace(/(^| )f/, "$1 f").trim();
+  const stage = m.stage.replaceAll("_", " ").toLowerCase();
   const open = openMatchId === m.id;
   return `
     <div class="match" data-id="${m.id}">
@@ -253,7 +246,7 @@ function matchRow(m) {
       <div class="fixture">
         <span class="team">${esc(m.homeTeam.name)}</span>
         <span class="score">${score}</span>
-        <span class="team away">${esc(m.awayTeam.name)}</span>
+        <span class="team">${esc(m.awayTeam.name)}</span>
         <span class="stage">${esc(stage)}</span>
       </div>
       <div class="actions">
@@ -371,9 +364,7 @@ async function buyAnalysis(id, btn) {
         <p class="stat-line">expected goals <b>${a.expectedGoals.a}</b> &#8211; <b>${a.expectedGoals.b}</b> &#183; form <b>${a.formIndexA}</b> vs <b>${a.formIndexB}</b> / 10</p>
       </div>`);
     requestAnimationFrame(() => {
-      slot.querySelectorAll(".prob").forEach((el, i) => {
-        el.querySelector(".fill").style.transform = "scaleX(1)";
-      });
+      slot.querySelectorAll(".prob .fill").forEach((el) => { el.style.transform = "scaleX(1)"; });
     });
   } catch (e) {
     if (ticker) clearInterval(ticker);

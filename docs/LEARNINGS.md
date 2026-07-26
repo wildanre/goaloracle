@@ -60,3 +60,10 @@ Compound-engineering log: symptom → root cause → fix → rule. Newest first.
 - **Symptom:** context7 docs for the MCP TypeScript SDK show `@modelcontextprotocol/server` + `serveStdio`, which doesn't match `@modelcontextprotocol/sdk@1.29`.
 - **Root cause:** Repo `main` documents `2.0.0-beta`; stable is still `1.x` (`McpServer` + `StdioServerTransport`, `registerTool` with a zod raw shape).
 - **Rule:** Cross-check fetched docs against `npm view <pkg> version` before coding; build against the published stable API.
+
+## CSS sibling selectors silently die around JS-injected DOM
+
+- **Symptom:** dashboard "spacing kacau": match-row separators never rendered and an injected section had zero top margin, despite correct-looking CSS.
+- **Root cause:** `.match + .match` and `section + section` assume adjacency, but JS renders `<div class="match"><div id="slot-N">` pairs and injects sections as siblings of other divs — the combinators never match. Also `#71717a` text failed 4.5:1 at 12px everywhere it was used, and an invisible 1.07:1 table hover shipped unnoticed.
+- **Fix:** `:not(:first-child)` / parent-scoped selectors instead of adjacency; contrast-check every text token against its actual background; impeccable layout audit (isolated sub-agent) caught 16 issues the eye glossed over.
+- **Rule:** after any JS render-shape change, re-verify structural CSS selectors against the real DOM (screenshot or DevTools), not the stylesheet; and audit spacing against one 4pt scale — accumulated off-grid values (7px, 9px, 18px) are what "messy" feels like.
