@@ -24,6 +24,10 @@ const envSchema = z.object({
   X402_FACILITATOR_URL: z.string().url().optional(),
   INJECTIVE_EVM_RPC: z.string().url().optional(),
   USDC_ADDRESS: address.optional(),
+  // Set by Vercel at runtime — used to build self-referential URLs, since
+  // serverless functions have no localhost listener.
+  VERCEL_URL: z.string().optional(),
+  VERCEL_PROJECT_PRODUCTION_URL: z.string().optional(),
 });
 
 export type Config = ReturnType<typeof loadConfig>;
@@ -55,9 +59,15 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
   const facilitatorPrivateKey = (e.FACILITATOR_PRIVATE_KEY ?? generatePrivateKey()) as `0x${string}`;
   const facilitatorIsEphemeral = !e.FACILITATOR_PRIVATE_KEY;
 
+  // Prefer the stable production alias (public) over the per-deployment URL,
+  // which may sit behind Vercel deployment protection.
+  const vercelHost = e.VERCEL_PROJECT_PRODUCTION_URL ?? e.VERCEL_URL;
+
   return {
     footballDataToken: e.FOOTBALL_DATA_TOKEN,
     port: e.PORT,
+    /** Base URL this app can reach itself on (self-calls: rpc-shim, demo proxy). */
+    selfBaseUrl: vercelHost ? `https://${vercelHost}` : `http://localhost:${e.PORT}`,
     payToAddress: e.PAY_TO_ADDRESS as `0x${string}` | undefined,
     agentPrivateKey: e.AGENT_PRIVATE_KEY as `0x${string}` | undefined,
     facilitatorPrivateKey,

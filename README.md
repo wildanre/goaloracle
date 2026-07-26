@@ -2,6 +2,15 @@
 
 **World Cup 2026 live data for AI agents — free MCP tools + premium analytics behind an x402 USDC paywall settled on Injective EVM testnet.**
 
+🔗 **Live demo:** https://goaloracle-kappa.vercel.app — dashboard + full API. Try the paywall right now:
+
+```bash
+curl https://goaloracle-kappa.vercel.app/premium/match/2001/analysis   # → HTTP 402 with x402 payment requirements
+curl https://goaloracle-kappa.vercel.app/matches/live                  # → free live matches
+```
+
+The deployed instance runs mock fixture data (always-live matches, no rate limits) with **real x402 settlement** on Injective EVM testnet — the dashboard's "Buy analysis" button produces a real USDC transaction.
+
 GoalOracle gives any AI agent (Claude, Cursor, custom frameworks) live 2026 World Cup data — scores, fixtures, standings, head-to-head — for free, with no API key and no signup. Premium AI-grade analytics (form indices, Poisson expected goals, win probabilities, predictions) sit behind an **x402 micropayment paywall**: the agent gets an HTTP 402 quote, signs a gasless EIP-3009 USDC authorization, and the payment settles on **Injective EVM testnet** — pay-per-call, no account, no subscription.
 
 Humans use the same stack through a bundled dashboard and a plain HTTP API; agents use the MCP server and the shipped Agent Skills, which teach them when to call which tool, how to check their wallet, and how to fund it cross-chain with **Circle CCTP**. Analytics are deterministic statistical estimates — never betting advice.

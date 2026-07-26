@@ -152,7 +152,7 @@ export function buildApp(provider: Provider, config: Config): express.Express {
       },
       config.facilitatorUrl
         ? { facilitatorUrl: config.facilitatorUrl }
-        : { facilitator: { privateKey: config.facilitatorPrivateKey, rpcUrl: `http://localhost:${config.port}/rpc-shim` } },
+        : { facilitator: { privateKey: config.facilitatorPrivateKey, rpcUrl: `${config.selfBaseUrl}/rpc-shim` } },
     ),
   );
 
@@ -215,7 +215,7 @@ export function buildApp(provider: Provider, config: Config): express.Express {
   // dashboard works on a clean clone. ---
   app.get("/demo/analyze/:id", wrap(async (req, res) => {
     const id = parseId(req);
-    const url = `http://localhost:${config.port}/premium/match/${id}/analysis`;
+    const url = `${config.selfBaseUrl}/premium/match/${id}/analysis`;
     if (!config.agentPrivateKey) {
       const challenge = await fetch(url);
       const body = (await challenge.json()) as Record<string, unknown>;
@@ -228,7 +228,7 @@ export function buildApp(provider: Provider, config: Config): express.Express {
       });
       return;
     }
-    const client = createInjectiveClient({ privateKey: config.agentPrivateKey, rpcUrl: `http://localhost:${config.port}/rpc-shim` });
+    const client = createInjectiveClient({ privateKey: config.agentPrivateKey, rpcUrl: `${config.selfBaseUrl}/rpc-shim` });
     const paidRes = await client.fetch(url);
     if (!paidRes.ok) {
       throw new HttpError(502, "X402_PAYMENT_FAILED", `Premium call failed with ${paidRes.status}: ${(await paidRes.text()).slice(0, 300)}`);
