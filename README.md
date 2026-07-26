@@ -129,7 +129,9 @@ Premium prices are quoted in the 402 response in USDC smallest units (6 decimals
 
 📹 *Demo video: coming with submission — script in [DEMO.md](DEMO.md).*
 
-*Screenshots: dashboard (live matches + standings + paid analysis panel) — see DEMO.md for the capture flow.*
+![GoalOracle dashboard — live matches, x402 payment trace with on-chain tx, win-probability analysis, standings](docs/media/dashboard.png)
+
+*The dashboard mid-purchase: the x402 payment trace shows the real settlement (402 quote → EIP-3009 signature → tx on Injective testnet) before the analysis renders.*
 
 ---
 
