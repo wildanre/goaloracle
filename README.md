@@ -74,7 +74,7 @@ Premium endpoints are mounted behind `injectivePaymentMiddleware` from the offic
 
 ### Agent Skills
 
-Three skills in [`skills/`](skills/) (SKILL.md format, YAML frontmatter) teach agents the product: [`world-cup-analyst`](skills/world-cup-analyst/SKILL.md) (tool routing + match briefings), [`match-predictor`](skills/match-predictor/SKILL.md) (check wallet → buy prediction → explain probabilities honestly), [`x402-payer`](skills/x402-payer/SKILL.md) (funding via faucet/CCTP + x402 troubleshooting). Install by copying a skill folder into your agent's skills directory (e.g. `~/.claude/skills/`). A test pins every tool name mentioned in the skills to the real MCP registrations.
+Three skills in [`skills/`](skills/) (SKILL.md format, YAML frontmatter) teach agents the product: [`world-cup-analyst`](skills/world-cup-analyst/SKILL.md) (tool routing + match briefings), [`match-predictor`](skills/match-predictor/SKILL.md) (check wallet → buy prediction → explain probabilities honestly), [`x402-payer`](skills/x402-payer/SKILL.md) (funding via faucet/CCTP + x402 troubleshooting). Install by copying a skill folder into your agent's skills directory (e.g. `~/.claude/skills/`) — Claude Code users opening this repo get them automatically via `.claude/skills/`. A test pins every tool name mentioned in the skills to the real MCP registrations, and the workflow is verified end-to-end: a headless agent session following `match-predictor` checked its wallet, bought a prediction via a real x402 settlement (tx on Injective testnet), and presented the probabilities with the required statistical-estimate framing.
 
 ## Quickstart
 
