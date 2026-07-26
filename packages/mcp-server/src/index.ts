@@ -6,6 +6,7 @@
  * MCP SDK docs: https://github.com/modelcontextprotocol/typescript-sdk
  * x402 docs:    https://docs.injective.network/developers-ai/x402
  */
+try { process.loadEnvFile(); } catch { /* no .env — defaults apply */ }
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { createInjectiveClient, parsePaymentResponseHeader } from "@injectivelabs/x402/client";
@@ -16,7 +17,9 @@ import { z } from "zod";
 
 const API = process.env.API_BASE_URL ?? `http://localhost:${process.env.PORT ?? 3000}`;
 const NETWORK = INJECTIVE_TESTNET_CAIP2;
-const RPC_URL = process.env.INJECTIVE_EVM_RPC ?? getRpcUrl(NETWORK);
+// Default to the API's /rpc-shim: it proxies the public testnet RPC with
+// retries and recovers receipts that the RPC's broken tx-hash index drops.
+const RPC_URL = process.env.INJECTIVE_EVM_RPC ?? `${API}/rpc-shim`;
 const agentKey = process.env.AGENT_PRIVATE_KEY as `0x${string}` | undefined;
 
 if (RPC_URL.includes("sentry.evm-rpc.injective.network")) {

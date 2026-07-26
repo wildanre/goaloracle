@@ -47,4 +47,6 @@ export interface Provider {
   getH2H(teamA: number, teamB: number): Promise<Match[]>;
   /** Recent matches (any status) involving one team — input for analytics. */
   getTeamMatches(teamId: number): Promise<Match[]>;
+  /** Finished competition matches, newest first. */
+  getRecentMatches(): Promise<Match[]>;
 }

@@ -4,6 +4,7 @@
  * endpoints, runs the x402 demo client (dry mode without AGENT_PRIVATE_KEY,
  * real USDC payment with it), then prints the MCP install snippet.
  */
+try { process.loadEnvFile(); } catch { /* no .env — defaults apply */ }
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -45,15 +46,27 @@ async function main(): Promise<void> {
   if (!ready) throw new Error("API did not become ready");
 
   banner("1. FREE tier — live matches (no key, no payment)");
-  const live = (await (await fetch(`${API}/matches/live`)).json()) as { matches: Array<{ homeTeam: { name: string }; awayTeam: { name: string }; score: { home: number; away: number }; minute: number }> };
-  for (const m of live.matches) {
+  const liveBody = (await (await fetch(`${API}/matches/live`)).json()) as { matches?: Array<{ id: number; homeTeam: { name: string }; awayTeam: { name: string }; score: { home: number; away: number }; minute: number }> };
+  const liveMatches = liveBody.matches ?? [];
+  for (const m of liveMatches) {
     console.log(`  LIVE ${m.minute}'  ${m.homeTeam.name} ${m.score.home} : ${m.score.away} ${m.awayTeam.name}`);
   }
+  if (liveMatches.length === 0) console.log("  (no live matches right now — tournament schedule)");
+
+  // Pick a real match id for the premium demo: a live one, else the most
+  // recently finished (works with the real provider after the tournament).
+  let demoMatchId = liveMatches[0]?.id;
+  if (demoMatchId === undefined) {
+    const recent = (await (await fetch(`${API}/matches/recent`)).json()) as { matches?: Array<{ id: number }> };
+    demoMatchId = recent.matches?.[0]?.id;
+  }
+  if (demoMatchId === undefined) throw new Error("No match found to demo against");
 
   banner("2. PREMIUM tier — x402 payment flow (402 → sign → settle → 200)");
   const clientExit = await run("npx", ["tsx", "scripts/demo-x402-client.ts"], {
     ...process.env,
     API_BASE_URL: API,
+    DEMO_MATCH_ID: process.env.DEMO_MATCH_ID ?? String(demoMatchId),
   });
   if (clientExit !== 0) throw new Error("demo x402 client failed");
 

@@ -11,6 +11,7 @@
  *   https://developers.circle.com/stablecoins/cctp-getting-started
  *   Contract addresses/domains verified against @circle-fin/provider-cctp-v2.
  */
+try { process.loadEnvFile(); } catch { /* no .env — defaults apply */ }
 import { http, createPublicClient, createWalletClient, erc20Abi, formatUnits, parseAbi, parseUnits, pad } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { sepolia } from "viem/chains";

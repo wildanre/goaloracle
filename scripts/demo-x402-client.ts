@@ -9,6 +9,7 @@
  *
  * Docs followed: https://docs.injective.network/developers-ai/x402
  */
+try { process.loadEnvFile(); } catch { /* no .env — defaults apply */ }
 import { createInjectiveClient, parsePaymentResponseHeader } from "@injectivelabs/x402/client";
 import { getRpcUrl, INJECTIVE_TESTNET_CAIP2 } from "@injectivelabs/x402/networks";
 import { privateKeyToAccount } from "viem/accounts";
@@ -54,7 +55,9 @@ async function main(): Promise<void> {
   log("2/4", `Paying with agent wallet ${account.address} — signing EIP-3009 authorization and retrying…`);
   const client = createInjectiveClient({
     privateKey: agentKey as `0x${string}`,
-    rpcUrl: process.env.INJECTIVE_EVM_RPC ?? getRpcUrl(INJECTIVE_TESTNET_CAIP2),
+    // The API's /rpc-shim proxies the public testnet RPC with retries and a
+    // recovery path for its broken tx-hash index — use it instead of raw RPC.
+    rpcUrl: `${API}/rpc-shim`,
     preferredNetworks: [INJECTIVE_TESTNET_CAIP2],
   });
   const paid = await client.fetch(url);

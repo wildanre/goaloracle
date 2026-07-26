@@ -53,6 +53,77 @@ export function buildApp(provider: Provider, config: Config): express.Express {
   const app = express();
   app.set("x-powered-by", false);
 
+  // --- JSON-RPC shim for the inline facilitator ---
+  // The public Injective testnet RPCs serve blocks/receipts via
+  // eth_getBlockReceipts but their per-hash tx index is broken (returns null
+  // for txs that are demonstrably on-chain), which makes viem's
+  // waitForTransactionReceipt — and therefore x402 settlement — fail after the
+  // money has already moved. The shim proxies everything upstream and, on a
+  // null receipt/tx-by-hash, recovers the answer by scanning recent blocks.
+  // ponytail: linear scan of last 60 blocks per poll (~40s window at 650ms
+  // blocks); index/cache it if settlement volume ever matters.
+  // Public testnet RPC connects are flaky (transient IPv6/connect timeouts) —
+  // retry with a short per-attempt timeout instead of undici's 10s default.
+  const upstreamRpc = async (payload: unknown): Promise<{ result?: unknown }> => {
+    let lastErr: unknown;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await fetch(config.rpcUrl, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(5000),
+        });
+        return (await res.json()) as { result?: unknown };
+      } catch (err) {
+        lastErr = err;
+        await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
+      }
+    }
+    throw lastErr;
+  };
+
+  app.post("/rpc-shim", express.json(), wrap(async (req, res) => {
+    const body = req.body as { method?: string; params?: unknown[] };
+    const out = await upstreamRpc(body);
+    const method = body?.method;
+    if ((method === "eth_getTransactionReceipt" || method === "eth_getTransactionByHash") && out.result === null) {
+      const hash = String(body.params?.[0] ?? "").toLowerCase();
+      const latest = await upstreamRpc({ jsonrpc: "2.0", id: 1, method: "eth_blockNumber", params: [] });
+      const head = Number.parseInt(String(latest.result), 16);
+      for (let b = head; b > head - 60 && b >= 0 && out.result === null; b--) {
+        const blockTag = `0x${b.toString(16)}`;
+        if (method === "eth_getTransactionReceipt") {
+          const r = await upstreamRpc({ jsonrpc: "2.0", id: 1, method: "eth_getBlockReceipts", params: [blockTag] });
+          const receipts = Array.isArray(r.result) ? (r.result as Array<{ transactionHash?: string }>) : [];
+          out.result = receipts.find((x) => x.transactionHash?.toLowerCase() === hash) ?? null;
+        } else {
+          const r = await upstreamRpc({ jsonrpc: "2.0", id: 1, method: "eth_getBlockByNumber", params: [blockTag, true] });
+          const txs = (r.result as { transactions?: Array<{ hash?: string }> } | null)?.transactions ?? [];
+          out.result = txs.find((x) => x.hash?.toLowerCase() === hash) ?? null;
+        }
+      }
+    }
+    res.json(out);
+  }));
+
+  // --- Premium preflight: resolve the data BEFORE the paywall ---
+  // Settlement uses the default "before" policy (the library's after-success
+  // buffering emits malformed HTTP in v0.0.1 — see docs/LEARNINGS.md), so the
+  // payer would be charged even if the handler failed. Preflight makes that
+  // impossible: bad ids / upstream data errors are rejected unpaid, and the
+  // fetched bundle is cached so the paid handler cannot fail on data.
+  app.use("/premium/match/:id", (req, _res, next) => {
+    loadMatchBundle(provider, Number(req.params.id)).then(() => next(), next);
+  });
+  app.use("/premium/team/:id", (req, _res, next) => {
+    const id = Number(req.params.id);
+    cached(`team:${id}`, () => provider.getTeamMatches(id)).then(
+      (ms) => (ms.length > 0 ? next() : next(new HttpError(404, "TEAM_NOT_FOUND", `No matches found for team ${id}`))),
+      next,
+    );
+  });
+
   // --- x402 paywall on premium routes (Injective EVM testnet, USDC) ---
   // Docs followed: https://docs.injective.network/developers-ai/x402
   const accepts = (amount: string) => [
@@ -81,7 +152,7 @@ export function buildApp(provider: Provider, config: Config): express.Express {
       },
       config.facilitatorUrl
         ? { facilitatorUrl: config.facilitatorUrl }
-        : { facilitator: { privateKey: config.facilitatorPrivateKey, rpcUrl: config.rpcUrl } },
+        : { facilitator: { privateKey: config.facilitatorPrivateKey, rpcUrl: `http://localhost:${config.port}/rpc-shim` } },
     ),
   );
 
@@ -99,6 +170,10 @@ export function buildApp(provider: Provider, config: Config): express.Express {
     if (!q.success) throw new HttpError(400, "INVALID_DATE", "date must be YYYY-MM-DD");
     const date = q.data.date;
     res.json({ matches: await cached(`fixtures:${date ?? "today"}`, () => provider.getFixtures(date)) });
+  }));
+
+  app.get("/matches/recent", wrap(async (_req, res) => {
+    res.json({ matches: await cached("recent", () => provider.getRecentMatches()) });
   }));
 
   app.get("/matches/:id", wrap(async (req, res) => {
@@ -153,7 +228,7 @@ export function buildApp(provider: Provider, config: Config): express.Express {
       });
       return;
     }
-    const client = createInjectiveClient({ privateKey: config.agentPrivateKey, rpcUrl: config.rpcUrl });
+    const client = createInjectiveClient({ privateKey: config.agentPrivateKey, rpcUrl: `http://localhost:${config.port}/rpc-shim` });
     const paidRes = await client.fetch(url);
     if (!paidRes.ok) {
       throw new HttpError(502, "X402_PAYMENT_FAILED", `Premium call failed with ${paidRes.status}: ${(await paidRes.text()).slice(0, 300)}`);

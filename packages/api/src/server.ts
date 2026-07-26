@@ -1,3 +1,4 @@
+try { process.loadEnvFile(); } catch { /* no .env — defaults apply */ }
 import { selectProvider } from "@goaloracle/data";
 import { buildApp } from "./app.js";
 import { loadConfig } from "./config.js";

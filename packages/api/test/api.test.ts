@@ -108,4 +108,10 @@ describe("x402 paywall", () => {
   it("leaves free endpoints unprotected", async () => {
     expect((await fetch(`${base}/matches/live`)).status).toBe(200);
   });
+
+  it("rejects unknown match ids in preflight — 404 before the paywall, so a payer is never charged for missing data", async () => {
+    const res = await fetch(`${base}/premium/match/999999/analysis`);
+    expect(res.status).toBe(404);
+    expect(((await res.json()) as { code: string }).code).toBe("MATCH_NOT_FOUND");
+  });
 });

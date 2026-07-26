@@ -134,4 +134,9 @@ export class FootballDataProvider implements Provider {
     const data = await this.get(`/teams/${teamId}/matches?limit=50`, fdMatchList);
     return data.matches.map(toMatch);
   }
+
+  async getRecentMatches(): Promise<Match[]> {
+    const data = await this.get(`/competitions/${COMPETITION}/matches?status=FINISHED`, fdMatchList);
+    return data.matches.map(toMatch).sort((a, b) => b.utcDate.localeCompare(a.utcDate));
+  }
 }

@@ -15,7 +15,9 @@ export class MockProvider implements Provider {
 
   async getFixtures(date?: string): Promise<Match[]> {
     const day = date ?? new Date().toISOString().slice(0, 10);
-    return this.matches().filter((m) => m.utcDate.slice(0, 10) === day);
+    // A live match that kicked off just before UTC midnight has yesterday's
+    // date — "today" must still include everything currently in play.
+    return this.matches().filter((m) => m.utcDate.slice(0, 10) === day || (!date && m.status === "LIVE"));
   }
 
   async getMatch(id: number): Promise<Match | null> {
@@ -37,5 +39,11 @@ export class MockProvider implements Provider {
 
   async getTeamMatches(teamId: number): Promise<Match[]> {
     return this.matches().filter((m) => m.homeTeam.id === teamId || m.awayTeam.id === teamId);
+  }
+
+  async getRecentMatches(): Promise<Match[]> {
+    return this.matches()
+      .filter((m) => m.status === "FINISHED")
+      .sort((a, b) => b.utcDate.localeCompare(a.utcDate));
   }
 }

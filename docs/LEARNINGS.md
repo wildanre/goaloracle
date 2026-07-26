@@ -2,6 +2,32 @@
 
 Compound-engineering log: symptom → root cause → fix → rule. Newest first.
 
+## x402 `settlementPolicy: "after-success"` emits malformed HTTP (v0.0.1)
+
+- **Symptom:** paid requests died client-side with `HTTPParserError: Response does not match the HTTP/1.1 protocol`; only when `after-success` was enabled.
+- **Root cause:** the middleware's write-buffering/replay of the Express response corrupts the wire format in `@injectivelabs/x402@0.0.1`.
+- **Fix:** default `"before"` policy + a **preflight middleware** mounted before the paywall that resolves and caches all data (404s unpaid on bad ids), so the paid handler can no longer fail and charge-on-5xx cannot happen.
+- **Rule:** on the money path, prefer making the handler infallible over relying on refund-style policies; pin the guarantee with a test (unpaid bad id → 404, not 402).
+
+## Public Injective testnet RPC: broken per-hash tx index → settlement "fails" after money moved
+
+- **Symptom:** settle submitted the tx, balances changed, Blockscout showed it — but `eth_getTransactionReceipt`/`eth_getTransactionByHash` returned `null` forever, so `waitForTransactionReceipt` timed out and the server reported `payment_settlement_failed` to a client that HAD paid.
+- **Root cause:** `k8s.testnet.json-rpc.injective.network` serves blocks and `eth_getBlockReceipts` fine but its hash index is broken.
+- **Fix:** `/rpc-shim` in the API: proxies JSON-RPC upstream (3 retries, 5s timeout — undici also hits transient IPv6 connect timeouts there) and recovers null receipt/tx lookups by scanning recent blocks via `eth_getBlockReceipts`. Facilitator, demo client, and MCP all point at the shim.
+- **Rule:** verify money-path assumptions against the chain (balances/explorer), not just the RPC answer; when public infra is broken, shim it locally rather than patching the library.
+
+## football-data.org free tier: 10 req/min kills naive discovery loops
+
+- **Symptom:** 429 during the demo after a "walk back 45 days" fixture search.
+- **Fix:** one-call `/matches/recent` endpoint (`competitions/WC/matches?status=FINISHED`, cached) + demo picks live → recent. Total demo upstream calls now ≤7/min.
+- **Rule:** against rate-limited APIs, never iterate per-day/per-item — find the single bulk endpoint first.
+
+## `.env` is not auto-loaded by Node/tsx
+
+- **Symptom:** user filled `.env`; everything still ran in dry mode.
+- **Fix:** `try { process.loadEnvFile(); } catch {}` (Node 20.12+ builtin, no dotenv dep) at every entrypoint.
+- **Rule:** any entrypoint that documents `.env` support must load it explicitly — and test with a populated `.env`, not just a clean env.
+
 ## Circle docs unreachable ≠ facts unavailable — npm packages are a better registry than web pages
 
 - **Symptom:** `developers.circle.com` fetches failed (ECONNRESET/TLS), and no search result stated Injective's CCTP domain ID.
