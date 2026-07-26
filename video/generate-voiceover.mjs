@@ -2,6 +2,8 @@
 //   ELEVENLABS_API_KEY=... node generate-voiceover.mjs [voiceId]
 // Then flips VO_READY to true in src/narration.ts and you re-render.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+try { process.loadEnvFile(); } catch {}
+try { process.loadEnvFile("../.env"); } catch {}
 
 const key = process.env.ELEVENLABS_API_KEY;
 if (!key) {

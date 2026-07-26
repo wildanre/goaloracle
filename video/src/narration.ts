@@ -4,7 +4,7 @@
  * which writes public/voiceover/<id>.mp3 and flips VO_READY to true.
  * Scene durations in the composition are fixed; each line is written to fit.
  */
-export const VO_READY = false;
+export const VO_READY = true;
 
 export const NARRATION = [
   {

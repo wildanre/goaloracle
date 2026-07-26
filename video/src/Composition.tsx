@@ -12,9 +12,9 @@ const FPS = 30;
 // Scene durations (frames) and the transition that FOLLOWS each scene.
 const SCENES = [
   { comp: TitleScene, frames: 11 * FPS, transition: slide({ direction: "from-bottom" }), t: 18 },
-  { comp: TerminalScene, frames: 25 * FPS, transition: wipe({ direction: "from-left" }), t: 20 },
-  { comp: DashboardScene, frames: 21 * FPS, transition: slide({ direction: "from-right" }), t: 18 },
-  { comp: AgentScene, frames: 17 * FPS, transition: fade(), t: 15 },
+  { comp: TerminalScene, frames: 20 * FPS, transition: wipe({ direction: "from-left" }), t: 20 },
+  { comp: DashboardScene, frames: 18 * FPS, transition: slide({ direction: "from-right" }), t: 18 },
+  { comp: AgentScene, frames: 13 * FPS, transition: fade(), t: 15 },
   { comp: CctpScene, frames: 10 * FPS, transition: slide({ direction: "from-top" }), t: 18 },
   { comp: OutroScene, frames: 9 * FPS, transition: null, t: 0 },
 ] as const;
@@ -52,7 +52,13 @@ const Main: React.FC = () => (
         ];
       })}
     </TransitionSeries>
-    <Audio src={staticFile("music.wav")} volume={0.2} />
+    <Audio
+      src={staticFile("music.wav")}
+      volume={(f) =>
+        // ducked under the voiceover, gentle fade at the very end
+        f > TOTAL_FRAMES - 60 ? Math.max(0, (0.13 * (TOTAL_FRAMES - f)) / 60) : 0.13
+      }
+    />
     {transitionStarts.map((f, i) => (
       <Sequence key={`w${i}`} from={f - 4} layout="none">
         <Audio src={staticFile("sfx/whoosh.wav")} volume={0.5} />

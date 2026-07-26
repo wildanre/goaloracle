@@ -74,7 +74,7 @@ const DEMO_LINES: TermLine[] = [
   { text: '  verdict: "France are statistical favourites at 45% (draw 28%)"', tone: "plain" },
 ];
 const LINE_START = 40;
-const PER_LINE = 50;
+const PER_LINE = 42;
 const SETTLED_AT = LINE_START + 9 * PER_LINE;
 
 export const TerminalScene: React.FC = () => {
@@ -118,8 +118,8 @@ const CAPTIONS = [
   "Settled on-chain — probabilities, form, expected goals",
 ] as const;
 // Image swaps happen mid-camera-move so the crossfade is masked by motion.
-const SWAP_1 = 168;
-const SWAP_2 = 428;
+const SWAP_1 = 140;
+const SWAP_2 = 352;
 
 export const DashboardScene: React.FC = () => {
   const frame = useCurrentFrame();
@@ -127,9 +127,9 @@ export const DashboardScene: React.FC = () => {
   const local = frame - [0, SWAP_1, SWAP_2][idx]!;
   const ease = Easing.bezier(...EASE_OUT);
   // one continuous camera: overview → dive into the trace → pan down to the analysis
-  const s = interpolate(frame, [150, 230], [1, 2], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: ease });
-  const tx = interpolate(frame, [150, 230], [0, -617], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: ease });
-  const ty = interpolate(frame, [150, 230, 400, 470], [0, -227, -227, -471], {
+  const s = interpolate(frame, [120, 190], [1, 2], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: ease });
+  const tx = interpolate(frame, [120, 190], [0, -617], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: ease });
+  const ty = interpolate(frame, [120, 190, 320, 380], [0, -227, -227, -471], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: ease,
@@ -138,9 +138,9 @@ export const DashboardScene: React.FC = () => {
     <Scene>
       <Backdrop drift={0.7} />
       <Voiceover id="dashboard" />
-      <Sfx file="mouse-click" at={126} volume={0.5} />
-      <Sfx file="whoosh" at={150} volume={0.4} />
-      <Sfx file="ding" at={430} volume={0.45} />
+      <Sfx file="mouse-click" at={100} volume={0.5} />
+      <Sfx file="whoosh" at={120} volume={0.4} />
+      <Sfx file="ding" at={358} volume={0.45} />
       <Rise>
         <div
           style={{
@@ -176,13 +176,13 @@ export const DashboardScene: React.FC = () => {
               }}
             />
           ))}
-          {frame < 165 ? (
+          {frame < 134 ? (
             <Cursor
               path={[
-                { x: 1250, y: 640, at: 40 },
-                { x: 1005, y: 120, at: 110 },
+                { x: 1250, y: 640, at: 26 },
+                { x: 1005, y: 120, at: 86 },
               ]}
-              clickAt={126}
+              clickAt={100}
             />
           ) : null}
         </div>
@@ -236,7 +236,7 @@ export const AgentScene: React.FC = () => {
       </Pop>
       <div style={{ display: "flex", flexDirection: "column", gap: 18, width: 1200 }}>
         {TOOL_CALLS.map((t, i) => {
-          const at = 60 + i * 34;
+          const at = 50 + i * 30;
           return (
             <React.Fragment key={t.name}>
               <Sfx file="switch" at={at} volume={0.3} />
@@ -271,19 +271,19 @@ export const AgentScene: React.FC = () => {
             </React.Fragment>
           );
         })}
-        <Sfx file="ding" at={180} volume={0.45} />
+        <Sfx file="ding" at={146} volume={0.45} />
         <div
           style={{
             fontFamily: T.mono,
             fontSize: 32,
             fontWeight: 600,
-            opacity: interpolate(frame, [180, 196], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
+            opacity: interpolate(frame, [146, 162], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
           }}
         >
           ✔ settled · tx 0x862b0890…b57d71
         </div>
       </div>
-      <Rise from={220}>
+      <Rise from={178}>
         <p style={{ fontSize: 40, color: T.muted, fontStyle: "italic", margin: 0, textAlign: "center", maxWidth: 1400 }}>
           “France 45%, draw 28% — a statistical estimate, not betting advice.”
         </p>
