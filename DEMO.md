@@ -1,48 +1,77 @@
 # DEMO.md — 90-second video script
 
-Every command works on a clean clone with zero env vars (mock data + x402 dry mode). With funded testnet keys, step 3 settles real USDC on Injective EVM testnet.
+Two terminals + one browser tab. With `.env` filled (funded testnet keys) every payment in this script settles **for real** on Injective EVM testnet and prints a tx hash you can open in Blockscout.
 
-## 0:00 — 0:15 · The pitch
+> Tip for the dashboard shots: the 2026 tournament is over, so live data has no in-play matches. Run the API in mock mode (`FOOTBALL_DATA_TOKEN= pnpm api`) to get a live Argentina–France quarter-final at 67' — payments still settle for real; only the football data is the bundled fixture set.
 
-> "GoalOracle gives AI agents live World Cup data free, and premium analytics behind an x402 USDC paywall on Injective — no API keys, agents pay per call."
+## 0:00 — 0:12 · The pitch
 
-Screen: README architecture diagram.
+**Narration:**
+> "AI agents can't sign up for sports data APIs. GoalOracle gives any agent live World Cup data for free — and premium analytics it can *pay for by itself*: x402 micropayments in USDC, settled on Injective."
 
-## 0:15 — 0:35 · One command, whole product
+**Screen:** README architecture diagram.
+
+## 0:12 — 0:40 · One command: free data + autonomous payment
 
 ```bash
-pnpm i && pnpm demo
+pnpm demo
 ```
 
-Narrate while it scrolls: free live scores print; then the x402 client hits the premium endpoint, shows the **HTTP 402** challenge (network `eip155:1439`, USDC asset, price), and the payment flow.
+**Screen:** let it scroll. Point at, in order:
+1. the free tier response (no key, no payment),
+2. `HTTP 402 Payment Required` — network `eip155:1439`, USDC asset, price `$0.01`,
+3. `Payment settled — HTTP 200` with the **tx hash**,
+4. the analysis JSON of the **real 2026 final (Spain 1–0 Argentina)**.
 
-## 0:35 — 0:55 · The dashboard
+**Narration:**
+> "One request hits the paywall — HTTP 402 quotes the price. The agent signs a gasless USDC authorization, retries, and the server settles it on Injective testnet. There's the transaction hash — and the analysis it just bought, for one cent."
 
-Open http://localhost:3900 (while demo runs) or `pnpm api` → http://localhost:3000.
+Click the explorer link → show the transfer on Blockscout. 📸
 
-Click **“Buy analysis · $0.01”** on the live Argentina–France match → win-probability bar + key factors + payment/dry-run status render. Screenshot moment. 📸
+## 0:40 — 0:58 · The dashboard
 
-## 0:55 — 1:15 · Agents use it via MCP + Skills
+```bash
+FOOTBALL_DATA_TOKEN= pnpm api    # mock mode: live matches for the visuals
+```
 
-Show `.mcp.json` (in repo), then in Claude Code:
+Open http://localhost:3000 → click **"Buy analysis · $0.01"** on Argentina–France (LIVE 67').
 
-> "What's live in the World Cup right now?" → `get_live_matches`
-> "Buy me an analysis of match 2001" → `get_match_analysis` pays $0.01 via x402 autonomously (with `AGENT_PRIVATE_KEY` set; otherwise it explains how to fund — that's the x402-payer skill).
+**Screen:** win-probability bar renders, `✔ paid — tx 0x…` underneath. 📸 (screenshot for README + X post)
 
-Mention: three Agent Skills ship in `skills/`.
+**Narration:**
+> "Humans get a dashboard; the buy button runs the same x402 flow with the demo wallet."
 
-## 1:15 — 1:30 · Cross-chain funding + close
+## 0:58 — 1:18 · Agents: MCP + Skills
+
+**Screen:** show `.mcp.json`, then in Claude Code:
+
+> *"What's live in the World Cup right now?"* → `get_live_matches`
+> *"Buy me an analysis of that match"* → `get_match_analysis` pays $0.01 autonomously, answer includes the tx hash
+
+**Narration:**
+> "For agents it's an MCP server — five free tools, two paid ones. The agent checks its own wallet, pays, and explains the probabilities. Three Agent Skills in the repo teach any agent this workflow, including how to fund itself."
+
+## 1:18 — 1:30 · Cross-chain funding + close
 
 ```bash
 pnpm cctp --dry-run
 ```
 
-> "Agents fund their own wallet cross-chain: Circle CCTP burns USDC on Sepolia, mints native USDC on Injective — domain 29. Free data, paid analytics, autonomous payments: an x402-gated sports oracle any agent can use today."
+**Screen:** the 5-step plan (burn on Sepolia → attest → mint on Injective, domain 29).
 
-## Funded-keys variant (for the settlement shot)
+**Narration:**
+> "Wallet empty? Circle CCTP bridges USDC from Sepolia to native USDC on Injective. Free data, paid analytics, autonomous payments — an x402 sports oracle any agent can use today. GoalOracle."
+
+---
+
+## Pre-flight checklist (before recording)
 
 ```bash
-export AGENT_PRIVATE_KEY=0x…      # holds testnet USDC (faucet.circle.com → Injective testnet)
-export FACILITATOR_PRIVATE_KEY=0x… # holds INJ gas (testnet.faucet.injective.network)
-pnpm demo                          # step 2 now settles on-chain and prints the tx + explorer link
+pnpm test && pnpm typecheck   # 36 green, clean
+cat .env                      # AGENT_PRIVATE_KEY + FACILITATOR_PRIVATE_KEY + PAY_TO_ADDRESS set
 ```
+
+- Agent wallet needs ≥ 0.05 USDC (https://faucet.circle.com → "Injective testnet")
+- Facilitator wallet needs ≥ 0.1 INJ (https://testnet.faucet.injective.network)
+- football-data.org free tier is 10 req/min — don't spam `pnpm demo` back-to-back; wait ~60s between takes
+- Keep a Blockscout tab ready: https://testnet.blockscout.injective.network/address/<PAY_TO_ADDRESS> (shows every demo payment arriving)
