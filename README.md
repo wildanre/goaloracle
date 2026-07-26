@@ -127,7 +127,7 @@ Premium prices are quoted in the 402 response in USDC smallest units (6 decimals
 
 ## Demo video & screenshots
 
-📹 *Demo video: coming with submission — script in [DEMO.md](DEMO.md).*
+📹 **Demo video:** https://x.com/danuste10/status/2081300064832803013 — 78s, motion graphics + voiceover, rendered with Remotion from [`video/`](video/) (script in [DEMO.md](DEMO.md)).
 
 ![GoalOracle dashboard — live matches, x402 payment trace with on-chain tx, win-probability analysis, standings](docs/media/dashboard.png)
 
