@@ -1,5 +1,7 @@
 # DEMO.md — 90-second video script
 
+> A rendered version of this video already exists: `cd video && npx remotion render goaloracle-demo out/goaloracle-demo.mp4` (Remotion project in `video/`, real terminal output + real dashboard captures + on-chain tx hashes). Re-render after any product change, or record live using the script below.
+
 Two terminals + one browser tab. With `.env` filled (funded testnet keys) every payment in this script settles **for real** on Injective EVM testnet and prints a tx hash you can open in Blockscout.
 
 > Tip for the dashboard shots: the 2026 tournament is over, so live data has no in-play matches. Run the API in mock mode (`FOOTBALL_DATA_TOKEN= pnpm api`) to get a live Argentina–France quarter-final at 67' — payments still settle for real; only the football data is the bundled fixture set.
